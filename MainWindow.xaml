@@ -6,11 +6,11 @@
         xmlns:local="clr-namespace:trayle"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800" MinWidth="600" MinHeight="400">
-    <DockPanel Margin="10">
-        <DockPanel Height="30" Margin="0,0,0,10" VerticalAlignment="Top" DockPanel.Dock="Top">
-            <Button x:Name="actionButton" Content="Button" Width="75" DockPanel.Dock="Right" Margin="10,0,0,0" Click="actionButton_Click"/>
+    <DockPanel Margin="5,5,5,5">
+        <DockPanel Height="30" Margin="0,0,0,5" VerticalAlignment="Top" DockPanel.Dock="Top">
+            <Button x:Name="actionButton" Content="Button" Width="75" DockPanel.Dock="Right" Margin="10,0,0,0" Click="ActionButton_Click"/>
             <ComboBox x:Name="itemsComboBox" VerticalContentAlignment="Center" />
         </DockPanel>
-        <TextBox TextWrapping="Wrap" Text="TextBox" />
+        <TextBox x:Name="outputTextBox" TextWrapping="Wrap" AcceptsReturn="True" FontFamily="Consolas" IsReadOnly="True" ScrollViewer.CanContentScroll="True" VerticalScrollBarVisibility="Visible" Foreground="White" Background="#FF343A40" />
     </DockPanel>
 </Window>

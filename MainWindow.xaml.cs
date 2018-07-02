@@ -14,29 +14,45 @@ using System.Windows.Navigation;
 using System.IO;
 using System.Diagnostics;
 using YamlDotNet.RepresentationModel;
+using System.Threading;
 
 namespace trayle
 {
-    /// <summary>
-    /// MainWindow.xaml 的交互逻辑
-    /// </summary>
     public partial class MainWindow : Window
     {
+        SynchronizationContext _syncContext;
         string title = "Trayle";
         List<Item> items = new List<Item>();
-        bool running = false;
+        Process process;
 
         public MainWindow()
         {
-            LoadConfig();
-            InitializeComponent();
-            LoadData();
+            _syncContext = SynchronizationContext.Current;
+
+            try
+            {
+                LoadConfig();
+                InitializeComponent();
+                InitializeData();
+
+                ActionButton_Click(actionButton, new RoutedEventArgs());
+            }
+            catch(Exception e)
+            {
+                MessageBox.Show(e.Message);
+                Environment.Exit(1);
+            }
         }
 
-        private void LoadConfig()
+        void LoadConfig()
         {
             var baseDir = Directory.GetCurrentDirectory();
             var configFile = Path.Combine(baseDir, "trayle.yml");
+
+            if (!File.Exists(configFile))
+            {
+                throw new FileNotFoundException("Can not found trayle.yml file");
+            }
 
             var yaml = new YamlStream();
             yaml.Load(new StreamReader(configFile));
@@ -73,7 +89,7 @@ namespace trayle
             }
         }
 
-        private void LoadData()
+        void InitializeData()
         {
             foreach (var item in items)
             {
@@ -81,24 +97,87 @@ namespace trayle
             }
             var selectedIndex = items.FindIndex(item => item.selected);
             itemsComboBox.SelectedIndex = selectedIndex == -1 ? 0 : selectedIndex;            
-            actionButton_Click(actionButton, new RoutedEventArgs());
         }
 
-        private void actionButton_Click(object sender, RoutedEventArgs e)
+        private void ActionButton_Click(object sender, RoutedEventArgs e)
         {
-            if (running)
+            if (process == null)
             {
-                running = false;
-                actionButton.Content = "Start";
-                itemsComboBox.IsEnabled = true;
+                SwitchStopUI();
+                StartProcess();
+                
             }
             else
             {
-                running = true;
-                actionButton.Content = "Stop";
-                itemsComboBox.IsEnabled = false;
+                StopProcess();
+                SwitchStartUI();
             }
             
+        }
+
+        void SwitchStartUI()
+        {
+            actionButton.Content = "Start  ▶";
+            itemsComboBox.IsEnabled = true;
+        }
+
+        void SwitchStopUI()
+        {
+            actionButton.Content = "Stop  ◼";
+            itemsComboBox.IsEnabled = false;
+            outputTextBox.Text = "";
+        }
+
+        void StopProcess()
+        {
+            if (process == null || process.HasExited)
+            {
+                return;
+            }
+
+            process.Kill();
+            process = null;
+        }
+
+
+        void StartProcess()
+        {
+            process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "gost.exe",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    // CreateNoWindow = true,
+                    Arguments = "-L socks://:9091 -L http://:9090 -D",
+                }
+            };
+
+            process.OutputDataReceived += (sender, args) => Display(args.Data);
+            process.ErrorDataReceived += (sender, args) => Display(args.Data);
+
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            new JobManagement.Job().AddProcess(process.Id);
+        }
+
+        void Display(string output)
+        {
+            if (output == null)
+            {
+                return;
+            }
+
+            Debug.Print(output);
+            _syncContext.Post(_ =>
+            {
+                outputTextBox.AppendText(output + "\r\n");
+                outputTextBox.ScrollToEnd();
+            }, null);
         }
     }
 
