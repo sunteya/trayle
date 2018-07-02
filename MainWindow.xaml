@@ -5,8 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:trayle"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        Title="MainWindow" Height="450" Width="800" MinWidth="600" MinHeight="400">
+    <DockPanel Margin="10">
+        <DockPanel Height="30" Margin="0,0,0,10" VerticalAlignment="Top" DockPanel.Dock="Top">
+            <Button x:Name="actionButton" Content="Button" Width="75" DockPanel.Dock="Right" Margin="10,0,0,0" Click="actionButton_Click"/>
+            <ComboBox x:Name="itemsComboBox" VerticalContentAlignment="Center" />
+        </DockPanel>
+        <TextBox TextWrapping="Wrap" Text="TextBox" />
+    </DockPanel>
 </Window>
