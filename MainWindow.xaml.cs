@@ -15,14 +15,15 @@ using System.IO;
 using System.Diagnostics;
 using YamlDotNet.RepresentationModel;
 using System.Threading;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace trayle
 {
     public partial class MainWindow : Window
     {
         SynchronizationContext _syncContext;
-        string title = "Trayle";
-        List<Item> items = new List<Item>();
+        Setting _setting;
         Process process;
 
         public MainWindow()
@@ -31,7 +32,7 @@ namespace trayle
 
             try
             {
-                LoadConfig();
+                LoadSetting();
                 InitializeComponent();
                 InitializeData();
 
@@ -44,7 +45,7 @@ namespace trayle
             }
         }
 
-        void LoadConfig()
+        void LoadSetting()
         {
             var baseDir = Directory.GetCurrentDirectory();
             var configFile = Path.Combine(baseDir, "trayle.yml");
@@ -54,48 +55,30 @@ namespace trayle
                 throw new FileNotFoundException("Can not found trayle.yml file");
             }
 
-            var yaml = new YamlStream();
-            yaml.Load(new StreamReader(configFile));
-            var mapping = (YamlMappingNode) yaml.Documents[0].RootNode;
+            var input = new StreamReader(configFile);
+            var deserializer = new DeserializerBuilder()
+                .WithNamingConvention(new CamelCaseNamingConvention())
+                .Build();
 
-            var titleKey = new YamlScalarNode("title");
-            if (mapping.Children.ContainsKey(titleKey))
+            _setting = deserializer.Deserialize<Setting>(input);
+
+            foreach (var item in _setting.items)
             {
-                this.title = mapping.Children[titleKey].ToString();
-            }
-
-            var itemNodes = (YamlSequenceNode) mapping.Children[new YamlScalarNode("items")];
-            foreach (YamlMappingNode itemNode in itemNodes)
-            {
-                var item = new Item();
-                item.command = itemNode.Children[new YamlScalarNode("command")].ToString();
-
-                var selectedKey = new YamlScalarNode("selected");
-                if (itemNode.Children.ContainsKey(selectedKey))
-                {
-                    item.selected = itemNode.Children[selectedKey].ToString() == "true";
-                }
-                
-                var nameKey = new YamlScalarNode("name");
-                if (itemNode.Children.ContainsKey(nameKey))
-                {
-                    item.name = itemNode.Children[nameKey].ToString();
-                }
-                else
+                if (item.name == null)
                 {
                     item.name = item.command;
                 }
-                items.Add(item);
             }
         }
 
         void InitializeData()
         {
-            foreach (var item in items)
+            this.Title = _setting.title;
+            foreach (var item in _setting.items)
             {
                 itemsComboBox.Items.Add(item.name);
             }
-            var selectedIndex = items.FindIndex(item => item.selected);
+            var selectedIndex = _setting.items.FindIndex(item => item.selected);
             itemsComboBox.SelectedIndex = selectedIndex == -1 ? 0 : selectedIndex;            
         }
 
@@ -142,16 +125,21 @@ namespace trayle
 
         void StartProcess()
         {
+            var item = _setting.items[itemsComboBox.SelectedIndex];
+            var pos = item.command.IndexOf(' ');
+            var name = item.command.Substring(0, pos);
+            var arguments = item.command.Substring(pos + 1);
+
             process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "gost.exe",
+                    FileName = name,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    // CreateNoWindow = true,
-                    Arguments = "-L socks://:9091 -L http://:9090 -D",
+                    CreateNoWindow = true,
+                    Arguments = arguments,
                 }
             };
 
@@ -181,10 +169,16 @@ namespace trayle
         }
     }
 
+    class Setting
+    {
+        public string title { get; set; } = "Trayle";
+        public List<Item> items { get; set; } = new List<Item>();
+    }
+
     class Item
     {
-        public string name;
-        public string command;
-        public bool selected = false;
+        public string name { get; set; }
+        public string command { get; set; }
+        public bool selected { get; set; } = false;
     }
 }

@@ -8,7 +8,7 @@
         Title="MainWindow" Height="450" Width="800" MinWidth="600" MinHeight="400">
     <DockPanel Margin="5,5,5,5">
         <DockPanel Height="30" Margin="0,0,0,5" VerticalAlignment="Top" DockPanel.Dock="Top">
-            <Button x:Name="actionButton" Content="Button" Width="75" DockPanel.Dock="Right" Margin="10,0,0,0" Click="ActionButton_Click"/>
+            <Button x:Name="actionButton" Content="Button" Width="80" DockPanel.Dock="Right" Margin="5,0,0,0" Click="ActionButton_Click"/>
             <ComboBox x:Name="itemsComboBox" VerticalContentAlignment="Center" />
         </DockPanel>
         <TextBox x:Name="outputTextBox" TextWrapping="Wrap" AcceptsReturn="True" FontFamily="Consolas" IsReadOnly="True" ScrollViewer.CanContentScroll="True" VerticalScrollBarVisibility="Visible" Foreground="White" Background="#FF343A40" />
