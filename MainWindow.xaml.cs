@@ -17,6 +17,7 @@ using YamlDotNet.RepresentationModel;
 using System.Threading;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using System.Drawing;
 
 namespace trayle
 {
@@ -34,9 +35,11 @@ namespace trayle
             {
                 LoadSetting();
                 InitializeComponent();
+                InitializeTrayIcon();
                 InitializeData();
 
                 ActionButton_Click(actionButton, new RoutedEventArgs());
+                ToggleWindowState();
             }
             catch(Exception e)
             {
@@ -69,6 +72,40 @@ namespace trayle
                     item.name = item.command;
                 }
             }
+        }
+
+        void InitializeTrayIcon()
+        {
+            System.Windows.Forms.NotifyIcon ni = new System.Windows.Forms.NotifyIcon
+            {
+                Icon = Properties.Resources.Main,
+                Visible = true
+            };
+            ni.Click += (sender, args) => ToggleWindowState();
+        }
+
+        void ToggleWindowState()
+        {
+            if (this.WindowState == WindowState.Minimized)
+            {
+                this.Show();
+                this.WindowState = WindowState.Normal;
+            }
+            else
+            {
+                this.WindowState = WindowState.Minimized;
+                this.Hide();
+            }
+        }
+
+        protected override void OnStateChanged(EventArgs e)
+        {
+            if (WindowState == WindowState.Minimized)
+            {
+                this.Hide();
+            }
+
+            base.OnStateChanged(e);
         }
 
         void InitializeData()
