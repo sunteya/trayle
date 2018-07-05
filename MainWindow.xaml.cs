@@ -197,11 +197,14 @@ namespace trayle
                 return;
             }
 
-            Debug.Print(output);
             _syncContext.Post(_ =>
             {
+                var keepScrolledToEnd = (outputTextBox.VerticalOffset + outputTextBox.ViewportHeight) >= outputTextBox.ExtentHeight;
                 outputTextBox.AppendText(output + "\r\n");
-                outputTextBox.ScrollToEnd();
+                if (keepScrolledToEnd)
+                {
+                    outputTextBox.ScrollToEnd();
+                }
             }, null);
         }
     }
