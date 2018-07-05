@@ -82,6 +82,7 @@ namespace trayle
                 Visible = true
             };
             ni.Click += (sender, args) => ToggleWindowState();
+            this.Closed += (sender, args) => ni.Dispose();
         }
 
         void ToggleWindowState()
