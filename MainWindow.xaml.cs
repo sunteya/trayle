@@ -18,6 +18,7 @@ using System.Threading;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using System.Drawing;
+using System.Windows.Interop;
 
 namespace trayle
 {
@@ -35,7 +36,7 @@ namespace trayle
             {
                 LoadSetting();
                 InitializeComponent();
-                InitializeTrayIcon();
+                InitializeWindowAndTray();
                 InitializeData();
 
                 ActionButton_Click(actionButton, new RoutedEventArgs());
@@ -74,11 +75,26 @@ namespace trayle
             }
         }
 
-        void InitializeTrayIcon()
+        void InitializeWindowAndTray()
         {
+            this.Title = _setting.title;
+            var icon = Properties.Resources.Main;
+            var customIconPath = _setting.icon;
+            if (customIconPath != null && File.Exists(customIconPath))
+            {
+                icon = System.Drawing.Icon.ExtractAssociatedIcon(customIconPath);
+                var bitmap = icon.ToBitmap();
+                var hBitmap = bitmap.GetHbitmap();
+
+                ImageSource imageSource = Imaging.CreateBitmapSourceFromHBitmap(
+                   hBitmap, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions()
+                );
+                this.Icon = imageSource;
+            }
+
             System.Windows.Forms.NotifyIcon ni = new System.Windows.Forms.NotifyIcon
             {
-                Icon = Properties.Resources.Main,
+                Icon = icon,
                 Visible = true
             };
             ni.Click += (sender, args) => ToggleWindowState();
@@ -111,7 +127,6 @@ namespace trayle
 
         void InitializeData()
         {
-            this.Title = _setting.title;
             foreach (var item in _setting.items)
             {
                 itemsComboBox.Items.Add(item.name);
@@ -213,6 +228,7 @@ namespace trayle
     class Setting
     {
         public string title { get; set; } = "Trayle";
+        public string icon { get; set; }
         public List<Item> items { get; set; } = new List<Item>();
     }
 
