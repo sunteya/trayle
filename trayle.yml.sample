@@ -1,0 +1,8 @@
+﻿title: TrayleDemo
+items:
+  - name: Demo1
+    command: ping -t 8.8.8.8
+
+  - name: Demo2
+    command: ping -t 4.4.4.4
+    selected: true
